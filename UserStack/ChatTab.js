@@ -19,22 +19,32 @@ const ChatTab = ({route , navigation}) => {
 
   const fetchData = useCallback( async()=>
   {
-    await db.ref(db_path)
-    .once('value', (snapshot) => {
+    await db.ref(db_path).limitToLast(20)
+    .on('child_added', (snapshot) => {
 
-    snapshot.forEach(element => {
-    const { _id , text , user , createdAt } = element.val()
 
-    const msg = {
-      _id ,
-      text , 
-      createdAt ,
-      user 
+    const {_id , text , user , createdAt } = snapshot.val()
+
+    if( typeof(_id)!= "undefined" && typeof(text)!="undefined" && typeof(user)!= "undefined" )
+    {
+      
+
+      const msg = {
+        _id ,
+        text , 
+        createdAt ,
+        user 
+      }
+      
+  
+      console.log(msg)
+      console.log(".....")
+  
+      setMessages(previousMessages => GiftedChat.append(previousMessages, msg) );
+  
+      return;
+
     }
-    setMessages(previousMessages => GiftedChat.append(previousMessages, msg)
-    );
-   });
- 
   });
 
   },[]
@@ -76,7 +86,7 @@ const ChatTab = ({route , navigation}) => {
   }
 
   const onSend = useCallback((messages = []) => {
-    setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
+    // setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
 
     messages.forEach(element => {
       const { _id ,text, user } = element;
@@ -98,22 +108,39 @@ const ChatTab = ({route , navigation}) => {
 
   const leftComponent = ()=>
   {
-      return(
-          <View style={{width : 500 , marginLeft : 8 , flexDirection : "row" , alignContent : "center" }} >
-            <View style={{marginTop : 5}} >
-            <TouchableOpacity onPress={()=>navigation.goBack()} >
-            <Ionicons name="md-arrow-round-back" size={25} color="white" />
+      return(           
+            <TouchableOpacity
+            style={
+              { width : 45 , 
+                height : 45 ,
+                justifyContent : "center" ,
+                alignItems : "center"
+              }
+            }
+            
+            onPress={()=>navigation.goBack()} >
+            <Ionicons name="md-arrow-round-back" size={31} color="white" />
             </TouchableOpacity>
-            </View>
-            <View style={{ marginLeft : 15 }} >
+      
+      );
+  }
+
+  const rightComponent = () =>
+  {
+    return(
+      <View style={{  }} >
             <Avatar rounded size="small" source={{uri: dp }} />
             </View>
-            <View style={{ marginLeft : 15 }} >
-      <Text style={{ fontSize : 25 , color : "white" , fontWeight : "bold" }} >{username}</Text>
-            </View>
-            
+    );
+  }
+
+  const centerComponent = () =>
+  {
+    return(
+          <View style={{ marginLeft : 15 }} >
+            <Text style={{ fontSize : 25 , color : "white" , fontWeight : "700" }} >{username}</Text>
           </View>
-      );
+    );
   }
 
   const loading = ()=>
@@ -133,6 +160,8 @@ const ChatTab = ({route , navigation}) => {
     <>
     <Header 
     leftComponent={leftComponent}
+    rightComponent={rightComponent}
+    centerComponent={centerComponent}
     containerStyle={{ borderBottomColor : "grey" ,backgroundColor: "#264653" , borderBottomWidth : 0.5 } }
     />
     <GiftedChat
